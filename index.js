@@ -27,7 +27,7 @@ const resolvers = {
           "https://hasura.io/jwt/claims": {
             "x-hasura-allowed-roles": ["user"],
             "x-hasura-default-role": "user",
-            "x-hasura-user-id": args.id,
+            "x-hasura-user-id": "" + args.id,
           }
         },
         privateKey,

@@ -5,7 +5,7 @@ const fetch = require("node-fetch");
 
 const typeDefs = gql`
     type Query {
-      jwt(id: Int!, username: String!): String
+      jwt(id: Int!, username: String): String
     }
 `;
 

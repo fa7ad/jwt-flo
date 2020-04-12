@@ -5,14 +5,14 @@ const fetch = require("node-fetch");
 
 const typeDefs = gql`
     type Query {
-      jwt(id: Int!, username: String): String
+      jwt(id: Int!, username: String, password: String): String
     }
 `;
 
-async function postRequest() {
+function postRequest(id) {
   const https = require("https");
 
-  const data = 'query MyQuery {users_by_pk(id: 3) {idusernamepassword}}';
+  const data = `query MyQuery {users_by_pk(id: ${id}) {idusernamepassword}}`;
 
   const options = {
     hostname: "https://hasura-shooter.herokuapp.com/v1/graphql",
@@ -29,6 +29,7 @@ async function postRequest() {
 
     res.on("data", d => {
       process.stdout.write(d);
+      return d;
     });
   });
 
@@ -49,6 +50,10 @@ const resolvers = {
       const token = authHeaders.replace("Bearer ", "");
       // decode the token to confirm greatness
       if (token !== "ShooterGreatness") {
+        return null;
+      }
+      var user = postRequest(args.id);
+      if (user.data.password !== args.password){
         return null;
       }
       const privateKey = "ShooterNationShooterNationShooterNation";

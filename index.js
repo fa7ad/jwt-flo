@@ -10,7 +10,7 @@ const typeDefs = gql`
     }
 `;
 
-function postRequest(id) {
+function postRequest(id, success) {
   let data = `
   query MyQuery {
     users_by_pk(id: ${id}) {
@@ -37,10 +37,7 @@ function postRequest(id) {
     console.log(`statusCode: ${res.statusCode}`);
     res.on("data", d => {
       responseData = d;
-      console.log(responseData + ' is the data');
-      return new Promise(resolve => {
-        resolve(responseData);
-  });
+      success(''+responseData);
     });
     res.on('end', function() {       
       return responseData;
@@ -55,6 +52,14 @@ function postRequest(id) {
   req.end();
 }
 
+function postRequestWrapper(id) {
+    return new Promise((resolve, reject) => {
+        postRequest(id,(successResponse) => {
+            resolve(successResponse);
+        });
+    });
+}
+
 const resolvers = {
   Query: {
     jwt: async(parent, args, context) => {
@@ -65,9 +70,10 @@ const resolvers = {
       if (token !== "ShooterGreatness") {
         return null;
       }
-      var user = await postRequest(args.id);
-      console.log(user)
+      var userString = await postRequestWrapper(args.id);
+      var user = JSON.parse(userString);
       if (user.data.password !== args.password){
+        console
         return null;
       }
       const privateKey = "ShooterNationShooterNationShooterNation";

@@ -2,6 +2,7 @@ const { ApolloServer } = require("apollo-server");
 const gql = require("graphql-tag");
 const jwt = require("jsonwebtoken");
 const fetch = require("node-fetch");
+const https = require("https");
 
 const typeDefs = gql`
     type Query {
@@ -10,8 +11,6 @@ const typeDefs = gql`
 `;
 
 async function postRequest(id) {
-  const https = require("https");
-
   const data = `
   query MyQuery {
     users_by_pk(id: ${id}) {
@@ -25,7 +24,6 @@ async function postRequest(id) {
   const options = {
     hostname: "hasura-shooter.herokuapp.com",
     method: "POST",
-    port: 8080,
     path: "/v1/graphql",
     headers: {
       "Content-Type": "application/json",
@@ -34,12 +32,18 @@ async function postRequest(id) {
     }
   };
 
-  const req = https.request(options, res => {
-    console.log('Abeg na!')
+  const req = await https.request(options, res => {
+    let responseData;
     console.log(`statusCode: ${res.statusCode}`);
     res.on("data", d => {
       console.log('epp')
-      process.stdout.write(d);
+      responseData += d;
+      console.log(responseData + ' is the data');
+    });
+    res.on('end', function() {
+        // may have to url decode data here before you have the JSON that was sent
+        //res.send({res:responseData});         
+      console.log(responseData + ' is the end');
     });
   });
   
@@ -47,7 +51,7 @@ async function postRequest(id) {
     console.error(error);
   });
 
-  req.write(data);
+  await req.write(data);
   req.end();
 }
 

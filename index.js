@@ -15,8 +15,10 @@ function postRequest(id) {
   const data = `query MyQuery {users_by_pk(id: ${id}) {idusernamepassword}}`;
 
   const options = {
-    hostname: "https://hasura-shooter.herokuapp.com/v1/graphql",
+    hostname: "hasura-shooter.herokuapp.com",
     method: "POST",
+    port: 8080,
+    path: "/v1/graphql",
     headers: {
       "Content-Type": "application/json",
       "Content-Length": data.length,
@@ -25,11 +27,10 @@ function postRequest(id) {
   };
 
   const req = https.request(options, res => {
+    console.log('Abeg na!')
     console.log(`statusCode: ${res.statusCode}`);
-
     res.on("data", d => {
       process.stdout.write(d);
-      return d;
     });
   });
 

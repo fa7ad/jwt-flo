@@ -37,9 +37,8 @@ function postRequest(id) {
     console.log(`statusCode: ${res.statusCode}`);
     res.on("data", d => {
       responseData = d;
-      
+      console.log(responseData + ' is the data');
       return new Promise(resolve => {
-        console.log(responseData + ' is the data');
         resolve(responseData);
   });
     });

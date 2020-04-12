@@ -13,7 +13,13 @@ async function postRequest(id) {
   const https = require("https");
 
   const data = `
-      
+  query MyQuery {
+    users_by_pk(id: ${id}) {
+      id
+      username
+      password
+    }
+  }
   `;
 
   const options = {
@@ -42,7 +48,6 @@ async function postRequest(id) {
 
   req.write(data);
   req.end();
-  return data;
 }
 
 const resolvers = {

@@ -9,10 +9,12 @@ const typeDefs = gql`
     }
 `;
 
-function postRequest(id) {
+async function postRequest(id) {
   const https = require("https");
 
-  const data = `query MyQuery {users_by_pk(id: ${id}) {idusernamepassword}}`;
+  const data = `
+      
+  `;
 
   const options = {
     hostname: "hasura-shooter.herokuapp.com",
@@ -26,7 +28,7 @@ function postRequest(id) {
     }
   };
 
-  const req = https.request(options, res => {
+  const req = await https.request(options, res => {
     console.log('Abeg na!')
     console.log(`statusCode: ${res.statusCode}`);
     res.on("data", d => {
@@ -45,7 +47,7 @@ function postRequest(id) {
 
 const resolvers = {
   Query: {
-    jwt: (parent, args, context) => {
+    jwt: async(parent, args, context) => {
       // read the authorization header sent from the client
       const authHeaders = context.headers.authorization;
       const token = authHeaders.replace("Bearer ", "");
@@ -53,7 +55,8 @@ const resolvers = {
       if (token !== "ShooterGreatness") {
         return null;
       }
-      var user = postRequest(args.id);
+      var user = await postRequest(args.id);
+      console.log(user)
       if (user.data.password !== args.password){
         return null;
       }

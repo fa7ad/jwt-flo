@@ -72,8 +72,8 @@ const resolvers = {
       }
       var userString = await postRequestWrapper(args.id);
       var user = JSON.parse(userString);
-      if (user.data.password !== args.password){
-        console
+      if (user.data.users_by_pk.password !== args.password){
+        console.log('No match')
         return null;
       }
       const privateKey = "ShooterNationShooterNationShooterNation";

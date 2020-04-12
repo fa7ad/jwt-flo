@@ -34,14 +34,15 @@ async function postRequest(id) {
     }
   };
 
-  const req = await https.request(options, res => {
+  const req = https.request(options, res => {
     console.log('Abeg na!')
     console.log(`statusCode: ${res.statusCode}`);
     res.on("data", d => {
+      console.log('epp')
       process.stdout.write(d);
     });
   });
-
+  
   req.on("error", error => {
     console.error(error);
   });

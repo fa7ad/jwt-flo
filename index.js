@@ -10,7 +10,7 @@ const typeDefs = gql`
     }
 `;
 
-async function postRequest(id) {
+function postRequest(id) {
   let data = `
   query MyQuery {
     users_by_pk(id: ${id}) {
@@ -32,13 +32,16 @@ async function postRequest(id) {
     }
   };
 
-  const req = await https.request(options, res => {
+  const req = https.request(options, res => {
     let responseData;
     console.log(`statusCode: ${res.statusCode}`);
     res.on("data", d => {
       responseData = d;
-      console.log(responseData + ' is the data');
-      return responseData;
+      
+      return new Promise(resolve => {
+        console.log(responseData + ' is the data');
+        resolve(responseData);
+  });
     });
     res.on('end', function() {       
       return responseData;
@@ -49,8 +52,8 @@ async function postRequest(id) {
     console.error(error);
   });
 
-  await req.write(data);
-  await req.end();
+  req.write(data);
+  req.end();
 }
 
 const resolvers = {

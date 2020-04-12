@@ -12,18 +12,15 @@ const typeDefs = gql`
 async function postRequest() {
   const https = require("https");
 
-  const data = JSON.stringify({
-    todo: "Buy the milk"
-  });
+  const data = 'query MyQuery {users_by_pk(id: 3) {idusernamepassword}}';
 
   const options = {
-    hostname: "flaviocopes.com",
-    port: 443,
-    path: "/todos",
+    hostname: "https://hasura-shooter.herokuapp.com/v1/graphql",
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Content-Length": data.length
+      "Content-Length": data.length,
+      "x-hasura-admin-secret": process.env.SECRET
     }
   };
 
@@ -41,6 +38,7 @@ async function postRequest() {
 
   req.write(data);
   req.end();
+  return data;
 }
 
 const resolvers = {

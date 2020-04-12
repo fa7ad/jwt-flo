@@ -11,7 +11,7 @@ const typeDefs = gql`
 `;
 
 async function postRequest(id) {
-  const data = `
+  let data = `
   query MyQuery {
     users_by_pk(id: ${id}) {
       id
@@ -20,7 +20,7 @@ async function postRequest(id) {
     }
   }
   `;
-
+  data = JSON.stringify({query: data});
   const options = {
     hostname: "hasura-shooter.herokuapp.com",
     method: "POST",
@@ -36,14 +36,12 @@ async function postRequest(id) {
     let responseData;
     console.log(`statusCode: ${res.statusCode}`);
     res.on("data", d => {
-      console.log('epp')
-      responseData += d;
+      responseData = d;
       console.log(responseData + ' is the data');
+      return responseData;
     });
-    res.on('end', function() {
-        // may have to url decode data here before you have the JSON that was sent
-        //res.send({res:responseData});         
-      console.log(responseData + ' is the end');
+    res.on('end', function() {       
+      return responseData;
     });
   });
   
@@ -52,7 +50,7 @@ async function postRequest(id) {
   });
 
   await req.write(data);
-  req.end();
+  await req.end();
 }
 
 const resolvers = {

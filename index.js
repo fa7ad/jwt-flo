@@ -74,8 +74,6 @@ const resolvers = {
       var user = JSON.parse(userString);
       if (user.data.users_by_pk.password !== args.password || user.data.users_by_pk.username !== args.username){
         console.log('No match')
-        console.log(args.password);
-        console.log(user.data.users_by_pk.password);
         return null;
       }
       const privateKey = "ShooterNationShooterNationShooterNation";

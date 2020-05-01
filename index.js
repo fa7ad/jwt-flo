@@ -67,7 +67,7 @@ const resolvers = {
       const authHeaders = context.headers.authorization;
       const token = authHeaders.replace("Bearer ", "");
       // decode the token to confirm greatness
-      if (token !== "ShooterGreatness") {
+      if (token !== process.env.CLIENT_TOKEN) {
         return null;
       }
       var userString = await postRequestWrapper(args.id);
@@ -76,7 +76,7 @@ const resolvers = {
         console.log('No match')
         return null;
       }
-      const privateKey = "ShooterNationShooterNationShooterNation";
+      const privateKey = process.env.PRIVATE_KEY;
       var result = jwt.sign(
         {
           id: args.id,

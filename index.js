@@ -10,7 +10,7 @@ const typeDefs = gql`
       jwt(email: String!, password: String): String
     }
     type Mutation {
-      signUp(email: String!, password: String!, name: String!): User
+      signUp(email: String!, password: String!, name: String!): String
     }
 `;
 
@@ -64,11 +64,10 @@ function postRequestWrapper(email) {
   });
 }
 
-
 function signupRequest(email, password, name, success) {
   let data = `
   mutation MyMutation {
-    insert_user_one(object: {email: "${email}", password: "${password}", profile: {data: {name: "${name}", settings: ""}}}, on_conflict: {}) {
+    insert_user_one(object: {email: "${email}", password: "${password}", profile: {data: {name: "${name}", settings: {}}}}, on_conflict: {}) {
       id
       email
       profile {
@@ -114,9 +113,9 @@ function signupRequest(email, password, name, success) {
   req.end();
 }
 
-function postRequestWrapper(email) {
+function signupRequestWrapper(email, password, name) {
   return new Promise((resolve, reject) => {
-    postRequest(email, successResponse => {
+    postRequest(email, password, name, successResponse => {
       resolve(successResponse);
     });
   });
@@ -135,21 +134,57 @@ const resolvers = {
       var userString = await postRequestWrapper(args.email);
       var user = JSON.parse(userString);
       if (
-        !user ||
+        !user.data.user.length ||
         !(await bcrypt.compare(args.password, user.data.user.password))
       ) {
         console.log("No match");
         return null;
       }
+      const userData = !user.data.user[0];
       const privateKey = process.env.PRIVATE_KEY;
       var result = jwt.sign(
         {
-          id: user.data.user.id,
+          id: userData.id,
           email: args.email,
           "https://hasura.io/jwt/claims": {
             "x-hasura-allowed-roles": ["user"],
             "x-hasura-default-role": "user",
-            "x-hasura-user-id": "" + user.data.user.id
+            "x-hasura-user-id": "" + userData.id
+          }
+        },
+        privateKey,
+        { algorithm: "HS256" }
+      );
+      return result;
+    }
+  },
+  Mutation: {
+    signUp: async (parent, args, context) => {
+      // read the authorization header sent from the client
+      const authHeaders = context.headers.authorization;
+      const token = authHeaders.replace("Bearer ", "");
+      // decode the token to confirm greatness
+      if (token !== process.env.CLIENT_TOKEN) {
+        return null;
+      }
+      const password = await bcrypt.hash(args.password, 10);
+      const userStr = await signupRequestWrapper(
+        args.email,
+        password,
+        args.name
+      );
+      const data = JSON.parse(userStr);
+      const userData = data.data.insert_user_one;
+
+      const privateKey = process.env.PRIVATE_KEY;
+      var result = jwt.sign(
+        {
+          id: userData.id,
+          email: userData.email,
+          "https://hasura.io/jwt/claims": {
+            "x-hasura-allowed-roles": ["user"],
+            "x-hasura-default-role": "user",
+            "x-hasura-user-id": "" + userData.id
           }
         },
         privateKey,

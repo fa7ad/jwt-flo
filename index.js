@@ -67,7 +67,7 @@ function postRequestWrapper(email) {
 function signupRequest(email, password, name, success) {
   let data = `
   mutation MyMutation {
-    insert_user_one(object: {email: "${email}", password: "${password}", profile: {data: {name: "${name}"}}}, on_conflict: {}) {
+    insert_user_one(object: {email: "${email}", password: "${password}", profile: {data: {name: "${name}"}}}) {
       id
       email
       profile {
@@ -115,7 +115,7 @@ function signupRequest(email, password, name, success) {
 
 function signupRequestWrapper(email, password, name) {
   return new Promise((resolve, reject) => {
-    postRequest(email, password, name, successResponse => {
+    signupRequest(email, password, name, successResponse => {
       resolve(successResponse);
     });
   });
@@ -135,12 +135,13 @@ const resolvers = {
       var user = JSON.parse(userString);
       if (
         !user.data.user.length ||
-        !(await bcrypt.compare(args.password, user.data.user.password))
+        !(await bcrypt.compare(args.password, user.data.user[0].password))
       ) {
         console.log("No match");
         return null;
       }
-      const userData = !user.data.user[0];
+      const userData = user.data.user[0];
+      console.log({userData})
       const privateKey = process.env.PRIVATE_KEY;
       var result = jwt.sign(
         {
@@ -174,8 +175,8 @@ const resolvers = {
         args.name
       );
       const data = JSON.parse(userStr);
+      console.log(data.errors);
       const userData = data.data.insert_user_one;
-
       const privateKey = process.env.PRIVATE_KEY;
       var result = jwt.sign(
         {

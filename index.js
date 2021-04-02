@@ -64,6 +64,64 @@ function postRequestWrapper(email) {
   });
 }
 
+
+function signupRequest(email, password, name, success) {
+  let data = `
+  mutation MyMutation {
+    insert_user_one(object: {email: "${email}", password: "${password}", profile: {data: {name: "${name}", settings: ""}}}, on_conflict: {}) {
+      id
+      email
+      profile {
+        id
+        name
+        organization
+        position
+        settings
+      }
+    }
+  }
+
+  `;
+  data = JSON.stringify({ query: data });
+  const options = {
+    hostname: "flo-life.hasura.app",
+    method: "POST",
+    path: "/v1/graphql",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": data.length,
+      "x-hasura-admin-secret": process.env.SECRET
+    }
+  };
+
+  const req = https.request(options, res => {
+    let responseData;
+    console.log(`statusCode: ${res.statusCode}`);
+    res.on("data", d => {
+      responseData = d;
+      success("" + responseData);
+    });
+    res.on("end", function() {
+      return responseData;
+    });
+  });
+
+  req.on("error", error => {
+    console.error(error);
+  });
+
+  req.write(data);
+  req.end();
+}
+
+function postRequestWrapper(email) {
+  return new Promise((resolve, reject) => {
+    postRequest(email, successResponse => {
+      resolve(successResponse);
+    });
+  });
+}
+
 const resolvers = {
   Query: {
     jwt: async (parent, args, context) => {

@@ -6,23 +6,23 @@ const https = require("https");
 
 const typeDefs = gql`
     type Query {
-      jwt(id: Int!, username: String, password: String): String
+      jwt(id: Int!, email: String, password: String): String
     }
 `;
 
 function postRequest(id, success) {
   let data = `
   query MyQuery {
-    users_by_pk(id: ${id}) {
+    user_by_pk(id: ${id}) {
       id
-      username
+      email
       password
     }
   }
   `;
-  data = JSON.stringify({query: data});
+  data = JSON.stringify({ query: data });
   const options = {
-    hostname: "hasura-shooter.herokuapp.com",
+    hostname: "flo-life.hasura.app",
     method: "POST",
     path: "/v1/graphql",
     headers: {
@@ -37,13 +37,13 @@ function postRequest(id, success) {
     console.log(`statusCode: ${res.statusCode}`);
     res.on("data", d => {
       responseData = d;
-      success(''+responseData);
+      success("" + responseData);
     });
-    res.on('end', function() {       
+    res.on("end", function() {
       return responseData;
     });
   });
-  
+
   req.on("error", error => {
     console.error(error);
   });
@@ -53,16 +53,16 @@ function postRequest(id, success) {
 }
 
 function postRequestWrapper(id) {
-    return new Promise((resolve, reject) => {
-        postRequest(id,(successResponse) => {
-            resolve(successResponse);
-        });
+  return new Promise((resolve, reject) => {
+    postRequest(id, successResponse => {
+      resolve(successResponse);
     });
+  });
 }
 
 const resolvers = {
   Query: {
-    jwt: async(parent, args, context) => {
+    jwt: async (parent, args, context) => {
       // read the authorization header sent from the client
       const authHeaders = context.headers.authorization;
       const token = authHeaders.replace("Bearer ", "");
@@ -72,15 +72,18 @@ const resolvers = {
       }
       var userString = await postRequestWrapper(args.id);
       var user = JSON.parse(userString);
-      if (user.data.users_by_pk.password !== args.password || user.data.users_by_pk.username !== args.username){
-        console.log('No match')
+      if (
+        user.data.user_by_pk.password !== args.password ||
+        user.data.user_by_pk.email !== args.email
+      ) {
+        console.log("No match");
         return null;
       }
       const privateKey = process.env.PRIVATE_KEY;
       var result = jwt.sign(
         {
           id: args.id,
-          username: args.username,
+          email: args.email,
           "https://hasura.io/jwt/claims": {
             "x-hasura-allowed-roles": ["user"],
             "x-hasura-default-role": "user",

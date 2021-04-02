@@ -3,17 +3,21 @@ const gql = require("graphql-tag");
 const jwt = require("jsonwebtoken");
 const fetch = require("node-fetch");
 const https = require("https");
+const bcrypt = require("bcrypt");
 
 const typeDefs = gql`
     type Query {
-      jwt(id: Int!, email: String, password: String): String
+      jwt(email: String!, password: String): String
+    }
+    type Mutation {
+      signUp(email: String!, password: String!, name: String!): User
     }
 `;
 
-function postRequest(id, success) {
+function postRequest(email, success) {
   let data = `
   query MyQuery {
-    user_by_pk(id: ${id}) {
+    user(where: {email: {_eq: "${email}"}}) {
       id
       email
       password
@@ -52,9 +56,9 @@ function postRequest(id, success) {
   req.end();
 }
 
-function postRequestWrapper(id) {
+function postRequestWrapper(email) {
   return new Promise((resolve, reject) => {
-    postRequest(id, successResponse => {
+    postRequest(email, successResponse => {
       resolve(successResponse);
     });
   });
@@ -70,11 +74,11 @@ const resolvers = {
       if (token !== process.env.CLIENT_TOKEN) {
         return null;
       }
-      var userString = await postRequestWrapper(args.id);
+      var userString = await postRequestWrapper(args.email);
       var user = JSON.parse(userString);
       if (
-        user.data.user_by_pk.password !== args.password ||
-        user.data.user_by_pk.email !== args.email
+        !user ||
+        !(await bcrypt.compare(args.password, user.data.user.password))
       ) {
         console.log("No match");
         return null;
@@ -82,12 +86,12 @@ const resolvers = {
       const privateKey = process.env.PRIVATE_KEY;
       var result = jwt.sign(
         {
-          id: args.id,
+          id: user.data.user.id,
           email: args.email,
           "https://hasura.io/jwt/claims": {
             "x-hasura-allowed-roles": ["user"],
             "x-hasura-default-role": "user",
-            "x-hasura-user-id": "" + args.id
+            "x-hasura-user-id": "" + user.data.user.id
           }
         },
         privateKey,

@@ -67,7 +67,7 @@ function postRequestWrapper(email) {
 function signupRequest(email, password, name, success) {
   let data = `
   mutation MyMutation {
-    insert_user_one(object: {email: "${email}", password: "${password}", profile: {data: {name: "${name}", settings: {}}}}, on_conflict: {}) {
+    insert_user_one(object: {email: "${email}", password: "${password}", profile: {data: {name: "${name}"}}}, on_conflict: {}) {
       id
       email
       profile {
